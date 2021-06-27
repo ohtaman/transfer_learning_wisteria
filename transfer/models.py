@@ -24,14 +24,17 @@ class TransferedModel(tf.keras.Model):
             weights=weights
         )
         self.pooling = tf.keras.layers.GlobalAveragePooling2D()
-        self.dropout = tf.keras.layers.Dropout(dropout_rate, name='top_dropout')
+        if dropout_rate > 0:
+            self.dropout = tf.keras.layers.Dropout(dropout_rate, name='top_dropout')
+        else:
+            self.dropout = None
         self.dense = tf.keras.layers.Dense(n_classes, dtype=tf.float32, name='output')
 
     def call(self, x):
         x = self.preprocess(x)
         x = self.base_model(x)
         x = self.pooling(x)
-        if self.dropout.rate > 0.:
+        if self.dropout is not None:
             x = self.dropout(x)
         x = self.dense(x)
         return x

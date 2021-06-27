@@ -78,7 +78,9 @@ def load_dataset(
     batch_size: int=32,
     valid_batch_size: int=32,
     buffer_size: int=1000,
-    image_size: Tuple[int, int]=(224, 224)
+    image_size: Tuple[int, int]=(224, 224),
+    data_dir: Union[str, None]='./datasets',
+    distribute: bool=False
 )->Tuple[Tuple[tf.data.Dataset, tf.data.Dataset], Dict]:
     if dataset_name.endswith('.csv'):
         (ds_train, ds_valid, ds_test), label_names = load_csv(dataset_name)
@@ -89,14 +91,16 @@ def load_dataset(
                 dataset_name,
                 split=['train[:80%]', 'train[80%:]', 'validation'],
                 as_supervised=True,
-                with_info=True
+                with_info=True,
+                data_dir=data_dir
             )
         else:
             (ds_train, ds_valid, ds_test), ds_info = tfds.load(
                 dataset_name,
                 split=['train', 'validation', 'test'],
                 as_supervised=True,
-                with_info=True
+                with_info=True,
+                data_dir=data_dir
             )
         label_names = ds_info.features['label'].names
         n_classes = len(label_names)
@@ -138,5 +142,12 @@ def load_dataset(
         repeat=False,
         shuffle=False
     )
+
+    if distribute:
+        options = tf.data.Options()
+        options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
+        ds_train = ds_train.with_options(options)
+        ds_valid = ds_valid.with_options(options)
+        ds_test = ds_test.with_options(options)
 
     return (ds_train, ds_valid, ds_test), info

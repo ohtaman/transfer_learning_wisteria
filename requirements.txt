@@ -1,2 +1,4 @@
 tensorflow==2.5.0
 click==8.0.1
+mlflow==1.18.0
+tensorflow-datasets==4.3.0
